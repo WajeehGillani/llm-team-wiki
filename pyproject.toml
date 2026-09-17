@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "llm-team-wiki"
+version = "0.1.0"
+description = "Compile team notes into a small, cited Markdown wiki."
+requires-python = ">=3.12"
+readme = "README.md"
+license = "MIT"
+dependencies = ["openai>=2.0,<3", "pydantic>=2.7,<3"]
+
+[project.scripts]
+llm-wiki = "llm_wiki.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["llm_wiki*"]
