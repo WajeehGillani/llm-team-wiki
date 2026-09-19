@@ -89,7 +89,20 @@ Ingestion validates the complete proposal before saving data and prepares the wi
 python -m unittest discover -s tests -v
 ```
 
-Tests mock the model and need no API key. They cover updates, conflicts, citations, source preservation, repeat ingestion, malformed output, unsafe paths, missing evidence, and publication failure recovery. GitHub Actions runs the same suite and checks the example wiki.
+The offline suite mocks the model and needs no API key. It covers updates, conflicts, citations, source preservation, repeat ingestion, malformed output, unsafe paths, missing evidence, and publication failure recovery.
+
+**Real-model regression:** two fictional notes independently claim October 12 and October 19 as the launch date. This evaluation calls the actual OpenAI client through production ingestion, then checks the generated topic claim rows after each note:
+
+```sh
+export OPENAI_API_KEY="your-key-here"
+python -m evals.launch_dates
+```
+
+It fails if either date disappears, a date loses its correct source citation, both dates collapse into one claim, an invented October date appears, or the two claims stop sharing an unresolved field. Dates surviving only in raw notes or source summaries do not count. Offline mutation tests verify that the checker catches these failures. The real-model check uses a temporary workspace and makes two API calls on a successful run; provider failures also fail the check, with no retry-until-pass behavior.
+
+GitHub Actions runs the offline suite plus the `live-ingest` job on pull requests, pushes to `main`, and manual runs. Configure the repository Actions secret `OPENAI_API_KEY`; optionally set the repository variable `OPENAI_MODEL`. A missing key **fails** the live job rather than silently skipping it. To block merges, require both `test` and `live-ingest` in the rule targeting `main`.
+
+Fork pull requests do not receive repository secrets, so their live check fails until a maintainer reviews the code and runs it from a trusted in-repository branch. This workflow uses `pull_request`, never `pull_request_target`, and does not give unreviewed fork code API credentials. The regression covers this specific date conflict; it is not proof that every model extraction is correct.
 
 ## Deliberate limits
 
